@@ -14,7 +14,7 @@ colnames = [
     "GUNCELLEME ZAMANI.1",
 ]
 
-CHUNK_SIZE = 100000
+CHUNK_SIZE = 10000
 
 month = "202304"
 
