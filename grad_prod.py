@@ -29,6 +29,9 @@ colnames = [
 
 CHUNK_SIZE = 100000
 date = "202304"
+
+CSV_WRITE_NAME = "data" + date + ".csv"
+
 iterator = pd.read_csv(
     "PP_GUNICIISLEM.M." + date + ".csv",
     chunksize=CHUNK_SIZE,
@@ -38,13 +41,16 @@ iterator = pd.read_csv(
 )
 
 data = pd.DataFrame({
-    "TIME": [],
+    "ISLEM ZAMANI": [],
+    "HACIM": [],
 })
 
 pd.set_option("display.float_format", "{:.2f}".format)
 
-# iterate 3 times
+# write ISLEM ZAMANI and HACIM  colnames to csv file
+data.to_csv(CSV_WRITE_NAME, mode="a", header=True, index=False, sep=";")
 
+# iterate 3 times
 i = 0
 
 for chunk in iterator:
@@ -59,11 +65,11 @@ for chunk in iterator:
             chunk["ISLEM ZAMANI"], format="%H:%M:%S.%f", errors="coerce"
         )
         temp_data = pd.DataFrame({
-            "TIME": [],
+            "ISLEM ZAMANI": [],
             "HACIM": [],
         })
-        temp_data["TIME"] = chunk[chunk["ISLEM ZAMANI"].notna()]["ISLEM ZAMANI"]
-        temp_data["TIME"] = temp_data["TIME"].dt.time
+        temp_data["ISLEM ZAMANI"] = chunk[chunk["ISLEM ZAMANI"].notna()]["ISLEM ZAMANI"]
+        temp_data["ISLEM ZAMANI"] = temp_data["ISLEM ZAMANI"].dt.time
 
         # filter if date is not NaT
 
@@ -74,6 +80,9 @@ for chunk in iterator:
 
         data = pd.concat([data, temp_data], ignore_index=True)
 
+        # write temp_data to same csv file by appending
+        temp_data.to_csv(CSV_WRITE_NAME, mode="a", header=False, index=False, sep=";")
+
         print("Chunk " + str(i) + " is done")
 
         i += 1
@@ -81,22 +90,3 @@ for chunk in iterator:
         break
 
 
-
-# remove seconds from data["TIME"]
-data["TIME"] = data["TIME"].apply(lambda x: x.replace(second=0, microsecond=0))
-
-# sum data by minutes
-data = data.groupby("TIME").sum()
-
-# convert data["DATE"] to str to plot
-data.index = data.index.astype(str)
-
-# plot data
-plt.plot(data.index, data["HACIM"])
-plt.xlabel("Time")
-
-# set y axis to millions
-plt.gca().yaxis.set_major_formatter(ticker.FormatStrFormatter("%.2f"))
-plt.ylabel("Volume(₺)")
-plt.title("Volume by Time")
-plt.show()
