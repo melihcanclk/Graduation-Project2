@@ -1,3 +1,5 @@
+import pandas as pd
+
 colnames = [
     "TARIH",
     "ALIS_SATIS",
@@ -14,10 +16,11 @@ colnames = [
     "GUNCELLEME ZAMANI.1",
 ]
 
-CHUNK_SIZE = 10000
+CHUNK_SIZE = 10000000
 
 month = "202304"
 
-day = "2023-04-06"
 
 CSV_WRITE_NAME = "data" + month + ".csv"
+
+dates = pd.date_range(start="2023-04-01", end="2023-04-30", freq="D")

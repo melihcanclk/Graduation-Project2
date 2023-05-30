@@ -13,62 +13,62 @@ def print_chunks_by_row(chunk):
         print(row)
 
 
-data = pd.DataFrame(
-    {
-        "TARIH": [],
-        "ISLEM ZAMANI": [],
-        "ISLEM HACMI": [],
-    }
-)
-
 pd.set_option("display.float_format", "{:.2f}".format)
 
-# write ISLEM ZAMANI and ISLEM HACMI  colnames to csv file if not exists
-if not os.path.isfile(CSV_WRITE_NAME):
-    data.to_csv(CSV_WRITE_NAME, mode="a", header=True, index=False, sep=";")
-    print("File created")
-else:
-    print("File exists")
-    sys.exit()
-
-del data
+i = 0
 
 for chunk in pd.read_csv(
     "PP_GUNICIISLEM.M." + month + ".csv",
     chunksize=CHUNK_SIZE,
     sep=";",
-    dtype=str,
     low_memory=False,
 ):
-    chunk["ISLEM ZAMANI"] = pd.to_datetime(
-        chunk["ISLEM ZAMANI"], format="%H:%M:%S.%f", errors="coerce"
-    )
+    # if i != 0:
+    if 1:
+        temp_data = pd.DataFrame(
+            {
+                "TARIH": [],
+                "ISLEM ZAMANI": [],
+                "ISLEM HACMI": [],
+            }
+        )
 
-    temp_data = pd.DataFrame(
-        {
-            "TARIH": [],
-            "ISLEM ZAMANI": [],
-            "ISLEM HACMI": [],
-        }
-    )
+        chunk["ISLEM ZAMANI"] = pd.to_datetime(
+            chunk["ISLEM ZAMANI"], format="%H:%M:%S.%f", errors="coerce"
+        )
+        # save only time, not date
+        chunk["ISLEM ZAMANI"] = chunk["ISLEM ZAMANI"].dt.time
+        # remove milliseconds
+        chunk["ISLEM ZAMANI"] = chunk["ISLEM ZAMANI"].apply(
+            lambda x: x.replace(microsecond=0)
+        )
 
-    # save only time, not date
-    chunk["ISLEM ZAMANI"] = chunk["ISLEM ZAMANI"].dt.time
-    # remove milliseconds
-    chunk["ISLEM ZAMANI"] = chunk["ISLEM ZAMANI"].apply(
-        lambda x: x.replace(microsecond=0)
-    )
+        chunk["ISLEM HACMI"] = pd.to_numeric(chunk["ISLEM HACMI"], errors="coerce")
 
-    chunk["ISLEM HACMI"] = pd.to_numeric(chunk["ISLEM HACMI"], errors="coerce")
+        temp_data["ISLEM HACMI"] = chunk["ISLEM HACMI"]
+        temp_data["TARIH"] = chunk["TARIH"]
+        temp_data["ISLEM ZAMANI"] = chunk["ISLEM ZAMANI"]
 
-    temp_data["ISLEM HACMI"] = chunk["ISLEM HACMI"]
-    temp_data["TARIH"] = chunk["TARIH"]
-    temp_data["ISLEM ZAMANI"] = chunk["ISLEM ZAMANI"]
+        for _date in dates:
+            _date = _date.strftime("%Y-%m-%d")
+            # filter data by date
+            filtered_data = temp_data[temp_data["TARIH"] == _date]
+            # sum ISLEM HACMI column by date and time
+            filtered_data = (
+                filtered_data.groupby(["TARIH", "ISLEM ZAMANI"])["ISLEM HACMI"]
+                .sum()
+                .reset_index()
+            )
+            # write to csv file
+            name = _date + CSV_WRITE_NAME
+            # write csv with name, if header exists, append to file
+            if os.path.isfile(name):
+                filtered_data.to_csv(name, mode="a", index=False, header=False, sep=";")
+            else:
+                filtered_data.to_csv(name, index=False, header=True, sep=";")
 
-    # append temp_data to data
+            print("Chunk : ", i, " written to ", name)
 
-    # write temp_data to same csv file by appending
-    temp_data.to_csv(CSV_WRITE_NAME, mode="a", header=False, index=False, sep=";")
- 
-
-
+        i += 1
+    else:
+        break
