@@ -13,6 +13,14 @@ def print_chunks_by_row(chunk):
         print(row)
 
 
+# if csv file with name = _date + CSV_WRITE_NAME exists, delete it
+for _date in dates:
+    _date = _date.strftime("%Y-%m-%d")
+    name = _date + CSV_WRITE_NAME
+    if os.path.isfile(name):
+        os.remove(name)
+        print("File ", name, " deleted")
+
 pd.set_option("display.float_format", "{:.2f}".format)
 
 i = 0
@@ -23,7 +31,7 @@ for chunk in pd.read_csv(
     sep=";",
     low_memory=False,
 ):
-    # if i != 0:
+    # if i != 1000:
     if 1:
         temp_data = pd.DataFrame(
             {
@@ -48,7 +56,6 @@ for chunk in pd.read_csv(
         temp_data["ISLEM HACMI"] = chunk["ISLEM HACMI"]
         temp_data["TARIH"] = chunk["TARIH"]
         temp_data["ISLEM ZAMANI"] = chunk["ISLEM ZAMANI"]
-
         for _date in dates:
             _date = _date.strftime("%Y-%m-%d")
             # filter data by date

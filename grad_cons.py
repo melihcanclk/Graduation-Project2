@@ -15,6 +15,7 @@ data = pd.DataFrame(
         "ISLEM HACMI": [],
     }
 )
+
 day = "2023-04-05"
 
 for chunk in pd.read_csv(
@@ -31,27 +32,25 @@ data = data.groupby(["TARIH", "ISLEM ZAMANI"])["ISLEM HACMI"].sum().reset_index(
 
 print(data)
 
+# convert ISLEM ZAMANI to datetime
+data["ISLEM ZAMANI"] = pd.to_datetime(data["ISLEM ZAMANI"], format="%H:%M:%S")
 
-# plot data with matplotlib
-# Combine date and time columns into a single datetime column
-data['DateTime'] = pd.to_datetime(data['TARIH'] + ' ' + data['ISLEM ZAMANI'])
+# plot data
+fig, ax = plt.subplots(figsize=(15, 7))
 
-# Plot the data
-plt.plot(data['DateTime'], data['ISLEM HACMI'])
+#plot by showing points 
+ax.plot(data["ISLEM ZAMANI"], data["ISLEM HACMI"], "o-")
+# x axis in minutes 
+ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=1))
+# format x axis
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
 
-# y axis in millions
-plt.gca().yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
-# Format the x-axis as date and time
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M:%S'))
-plt.gcf().autofmt_xdate()  # Rotate and align the tick labels
+#y axis in millions
+ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, pos: "%dM" % (y * 1e-6)))
 
-# Set labels and title
-plt.xlabel('ISLEM ZAMANI')
-plt.ylabel('ISLEM HACMI')
-plt.title('Plot of ISLEM HACMI over time')
-
-# save plot as png
-plt.savefig(day + '.png')
-
-# Display the plot
+ax.set_xlabel("Time(m)")
+ax.set_ylabel("Volume(₺)")
+# rotate x axis labels
+plt.xticks(rotation=90)
+ax.set_title("Volume by time")
 plt.show()

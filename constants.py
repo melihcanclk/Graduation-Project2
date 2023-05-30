@@ -16,11 +16,13 @@ colnames = [
     "GUNCELLEME ZAMANI.1",
 ]
 
-CHUNK_SIZE = 10000000
+CHUNK_SIZE = 10000
 
 month = "202304"
-
 
 CSV_WRITE_NAME = "data" + month + ".csv"
 
 dates = pd.date_range(start="2023-04-01", end="2023-04-30", freq="D")
+
+# get weekdays
+dates = [date for date in dates if date.weekday() < 5] 
