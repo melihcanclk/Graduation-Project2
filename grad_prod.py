@@ -1,37 +1,35 @@
 import os
-import sys
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
-import numpy as np
-from datetime import datetime
 from constants import *
 
 
-def print_chunks_by_row(chunk):
-    for index, row in chunk.iterrows():
-        print(row)
+# create directory named DIRECTORY if it doesnt exist
+if not os.path.exists(DIRECTORY):
+    os.makedirs(DIRECTORY)
+else:
+    # remove all files from DIRECTORY
+    for file in os.listdir(DIRECTORY):
+        os.remove(os.path.join(DIRECTORY, file))
 
-
-# if csv file with name = _date + CSV_WRITE_NAME exists, delete it
 for _date in dates:
     _date = _date.strftime("%Y-%m-%d")
-    name = _date + CSV_WRITE_NAME
-    if os.path.isfile(name):
-        os.remove(name)
-        print("File ", name, " deleted")
+    # create csv file with name _date inside DIRECTORY if it doesnt exist
+    name = DIRECTORY + "/" + _date + ".csv"
+    if not os.path.isfile(name):
+        open(name, "w").close()
+
 
 pd.set_option("display.float_format", "{:.2f}".format)
 
 i = 0
 
 for chunk in pd.read_csv(
-    "PP_GUNICIISLEM.M." + month + ".csv",
+    "PP_GUNICIISLEM.M." + year + month + ".csv",
     chunksize=CHUNK_SIZE,
     sep=";",
     low_memory=False,
 ):
-    # if i != 1000:
+    # if i != 100:
     if 1:
         temp_data = pd.DataFrame(
             {
@@ -66,15 +64,14 @@ for chunk in pd.read_csv(
                 .sum()
                 .reset_index()
             )
-            # write to csv file
-            name = _date + CSV_WRITE_NAME
+            name = DIRECTORY + "/" + _date + ".csv"
             # write csv with name, if header exists, append to file
-            if os.path.isfile(name):
-                filtered_data.to_csv(name, mode="a", index=False, header=False, sep=";")
+            if i == 0:
+                filtered_data.to_csv(name, sep=";", index=False)
             else:
-                filtered_data.to_csv(name, index=False, header=True, sep=";")
+                filtered_data.to_csv(name, sep=";", index=False, mode="a", header=False)
 
-            print("Chunk : ", i, " written to ", name)
+        print("Chunk " + str(i) + " processed")
 
         i += 1
     else:
