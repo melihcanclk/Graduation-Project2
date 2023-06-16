@@ -14,6 +14,7 @@ import numpy as np
 # import wavelet for wavelet transform
 import pywt
 
+from scipy.stats import iqr, zscore
 from custom_calendar import MyCalendar
 
 from constants import *
@@ -25,8 +26,22 @@ pd.set_option("display.float_format", "{:.2f}".format)
 day = "2023-04-03"
 
 
+def calc_outliers(data, percentage_of_outliers=25):
+    # apply outlier detection to fft_result using IQR
+    q1 = np.quantile(data, percentage_of_outliers / 100)
+    q3 = np.quantile(data, 1 - (percentage_of_outliers / 100))
+    iqr = q3 - q1
+    lower_bound = q1 - 1.5 * iqr
+    upper_bound = q3 + 1.5 * iqr
+
+    # get outliers
+    outliers = np.where((data > upper_bound) | (data < lower_bound))
+
+    return outliers
+
+
 # plot data for time series
-def plot_data(year, month, day, switch_var):
+def plot_data(year, month, day, switch_var, percentage_of_outliers=25.0):
     # create day string
     day = year + "-" + month + "-" + day
 
@@ -91,93 +106,77 @@ def plot_data(year, month, day, switch_var):
         wavelet = "db4"
         coeffs = pywt.wavedec(data["ISLEM HACMI"], wavelet=wavelet, level=5)
 
-        # calculate the cA5 and cD5 coefficients
-        cA5, cD5, cD4, cD3, cD2, cD1 = coeffs
+        # get outliers
+        outliers = []
 
-        # normalize the coefficients
-        cA5 = pywt.threshold(cA5, np.std(cA5), mode="soft")
-        cD5 = pywt.threshold(cD5, np.std(cD5), mode="soft")
-        cD4 = pywt.threshold(cD4, np.std(cD4), mode="soft")
-        cD3 = pywt.threshold(cD3, np.std(cD3), mode="soft")
-        cD2 = pywt.threshold(cD2, np.std(cD2), mode="soft")
-        cD1 = pywt.threshold(cD1, np.std(cD1), mode="soft")
+        outliers.append(calc_outliers(data["ISLEM HACMI"], percentage_of_outliers))
 
-        # reconstruct the signal using the thresholded coefficients
-        reconstructed_signal = pywt.waverec([cA5, cD5, cD4, cD3, cD2, cD1], wavelet)
+        for coeff in coeffs:
+            outliers.append(calc_outliers(coeff, percentage_of_outliers))
 
-        # remove negative values
-        reconstructed_signal[reconstructed_signal < 0] = 0
+        fig = plt.figure(figsize=(12, 7), layout="constrained")
+        spec = fig.add_gridspec(4, 2)
 
-        # plot the reconstructed signal
-        fig, ax = plt.subplots(figsize=(15, 7))
-        original_plot = ax.plot(data["ISLEM HACMI"], label="original signal")
-        reconstructed_plot = ax.plot(reconstructed_signal, label="reconstructed signal")
+        # plot data
+        ax0 = fig.add_subplot(spec[0, :])
+        ax0.plot(data["ISLEM ZAMANI"], data["ISLEM HACMI"], "b")
+        ax0.plot(
+            data.iloc[outliers[0]]["ISLEM ZAMANI"],
+            data.iloc[outliers[0]]["ISLEM HACMI"],
+            "o",
+            markersize=1,
+            color="red",
+        )
+        ax0.set_title("Volume by time - " + day)
 
-        ## removable legend
-        legend = plt.legend(loc="upper right")
-        original_legend, reconstructed_legend = legend.get_lines()
-        original_legend.set_picker(True)
-        original_legend.set_pickradius(10)
-        reconstructed_legend.set_picker(True)
-        reconstructed_legend.set_pickradius(10)
-
-        graphs = {}
-        graphs[original_legend] = original_plot
-        graphs[reconstructed_legend] = reconstructed_plot
-
-        def onpick(event):
-            _legend = event.artist
-
-            _plot = graphs[_legend][0]
-
-            visible = _plot.get_visible()
-            _plot.set_visible(not visible)
-
-            event.artist.set_visible(not visible)
-
-            fig.canvas.draw()
-
-        plt.connect("pick_event", onpick)
-
-        ax.set_xlabel("Time(m)")
-        ax.set_ylabel("Volume(₺)")
-        # rotate x axis labels
-        plt.xticks(rotation=90)
-        # disappear legend on click
-        ax.set_title("Wavelet - " + day)
+        # plot coefficients in for loop by adding subplots
+        for i in range(0, 3):
+            for j in range(0, 2):
+                ax = fig.add_subplot(spec[i + 1, j])
+                ax.plot(coeffs[i + j], "b")
+                ax.plot(
+                    coeffs[i + j][outliers[i + j + 1]],
+                    "o",
+                    markersize=1,
+                    color="red",
+                )
+                
+                ax.set_title("Coefficients - " + str(i + 1) + str(j + 1))
+            
         plt.show()
+
     else:
         # apply fast fourier transform to ISLEM HACMI
         fft_result = np.fft.fft(data["ISLEM HACMI"])
 
-        # get frequency every second
+        # remove date from fft_result in ISLEM ZAMAANI
+        data["ISLEM ZAMANI"] = data["ISLEM ZAMANI"].dt.time
+
+        # get frequencies
         freq = np.fft.fftfreq(len(data["ISLEM HACMI"]))
-        freq = freq * 86400
 
-        # create new dataframe with fft result
+        # get outliers
+        outliers = calc_outliers(fft_result, percentage_of_outliers)
 
-        fft_data = pd.DataFrame(
-            {
-                "freq": freq,
-                "fft": fft_result,
-            }
-        )
+        # print when outliers occur in time series
+        print(data.iloc[outliers])
 
-        # remove negative frequencies
-        fft_data = fft_data[fft_data["freq"] > 0]
-
-        # plot fft result
+        # plot fft_result with outliers
         fig, ax = plt.subplots(figsize=(15, 7))
-        ax.plot(fft_data["freq"], np.abs(fft_data["fft"]))
-        ax.set_xlabel("Frequency(Hz)")
-        ax.set_ylabel("Amplitude")
-        ax.set_title("FFT - " + day)
+        ax.plot(freq, fft_result, "o", markersize=1)
+
+        # plot outliers
+        ax.plot(freq[outliers], fft_result[outliers], "o", markersize=1, color="red")
+
+        ax.set_xlabel("Frequency")
+        ax.set_ylabel("Volume(₺)")
+        ax.set_title("Volume by frequency - " + day)
         plt.show()
 
 
 window = Tk()
 window.title("Graduation Project")
-window.geometry("400x300")
+window.geometry("400x400")
 
 # set resizable to false
 window.resizable(False, False)
@@ -208,6 +207,17 @@ cal = MyCalendar(
 for holiday in holidays:
     cal.disable_date(holiday)
 
+percentage_of_outliers = Scale(
+    window,
+    from_=0,
+    to=50,
+    orient=HORIZONTAL,
+    label="Percentage of outliers",
+    length=200,
+    tickinterval=10,
+    resolution=1,
+)
+
 
 # get selected date
 def get_date():
@@ -217,7 +227,7 @@ def get_date():
     # seperate date into year, month, day
     year, month, day = str(date).split("-")
     # plot data
-    plot_data(year, month, day, switch_var.get())
+    plot_data(year, month, day, switch_var.get(), percentage_of_outliers.get())
 
 
 # display calendar
@@ -235,65 +245,15 @@ wave_button = Radiobutton(
     switch_frame, text="Wavelet", variable=switch_var, value="WAVE"
 )
 
+
 time_button.pack(side=LEFT)
 freq_button.pack(side=LEFT)
 wave_button.pack(side=LEFT)
+percentage_of_outliers.pack()
 
 
 # create button to get date
 Button(window, text="Get Date", command=get_date).pack()
 
+
 window.mainloop()
-
-
-# # apply fast fourier transform to ISLEM HACMI
-# fft_result = np.fft.fft(data["ISLEM HACMI"])
-
-# # get frequency every second
-# freq = np.fft.fftfreq(len(data["ISLEM HACMI"]))
-# freq = freq * 86400
-
-
-# # create new dataframe with fft result
-
-# fft_data = pd.DataFrame(
-#     {
-#         "freq": freq,
-#         "fft": fft_result,
-#     }
-# )
-
-# # remove negative frequencies
-# fft_data = fft_data[fft_data["freq"] > 0]
-
-# # plot fft result
-# fig, ax = plt.subplots(figsize=(15, 7))
-# ax.plot(fft_data["freq"], np.abs(fft_data["fft"]))
-# ax.set_xlabel("Frequency(Hz)")
-# ax.set_ylabel("Amplitude")
-# ax.set_title("FFT")
-# plt.show()
-
-
-# print(data)
-
-# # plot data for time series
-# fig, ax = plt.subplots(figsize=(15, 7))
-
-# #plot with dots
-# ax.plot(data["ISLEM ZAMANI"], data["ISLEM HACMI"], "o", markersize=1)
-
-# # x axis in minutes
-# ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=1))
-# # format x axis
-# ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
-
-# #y axis in millions
-# ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda y, pos: "%dM" % (y * 1e-6)))
-
-# ax.set_xlabel("Time(m)")
-# ax.set_ylabel("Volume(₺)")
-# # rotate x axis labels
-# plt.xticks(rotation=90)
-# ax.set_title("Volume by time")
-# plt.show()
