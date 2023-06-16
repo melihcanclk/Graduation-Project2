@@ -31,10 +31,10 @@ colnames = [
     "GUNCELLEME ZAMANI.1",
 ]
 
-CHUNK_SIZE = 10000
+CHUNK_SIZE = 9000000 # nearly 8 GB data in one chunk moved to RAM 
 
 year = "2023"
-month = "03"
+month = "01"
 
 DIRECTORY = "data" + year + month
 
