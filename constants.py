@@ -34,7 +34,7 @@ colnames = [
 CHUNK_SIZE = 9000000 # nearly 8 GB data in one chunk moved to RAM 
 
 year = "2023"
-month = "01"
+month = "02"
 
 DIRECTORY = "data" + year + month
 
@@ -45,6 +45,13 @@ dates = get_weekdays(int(year), int(month))
 # holidays are 1 jan, 21, 22, 23 april, 1 may, 19 may, 28 june, 29 june, 30 june, 1 july, 15 july, 30 august, 28 october, 29 october for 2023
 holidays = [
     "2023-01-01",
+    "2023-02-08",
+    "2023-02-09",
+    "2023-02-10",
+    "2023-02-11",
+    "2023-02-12",
+    "2023-02-13",
+    "2023-02-14",
     "2023-04-21",
     "2023-04-22",
     "2023-04-23",
@@ -58,6 +65,7 @@ holidays = [
     "2023-08-30",
     "2023-10-28",
     "2023-10-29",
+
 ]
 
 holidays = [pd.to_datetime(holiday).date() for holiday in holidays]

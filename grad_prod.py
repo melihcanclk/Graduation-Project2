@@ -7,9 +7,22 @@ from constants import *
 if not os.path.exists(DIRECTORY):
     os.makedirs(DIRECTORY)
 else:
-    # remove all files from DIRECTORY
-    for file in os.listdir(DIRECTORY):
-        os.remove(os.path.join(DIRECTORY, file))
+    # ask user if he wants to overwrite existing data
+    overwrite = input(
+        "Directory "
+        + DIRECTORY
+        + " already exists. Do you want to overwrite existing data? (y/n) "
+    )
+    overwrite = overwrite.lower()
+
+    if overwrite == "y":
+        # delete directory and create again
+        os.system("rm -rf " + DIRECTORY)
+        os.makedirs(DIRECTORY)
+    else:
+        # exit program
+        exit()
+
 
 for _date in dates:
     _date = _date.strftime("%Y-%m-%d")
