@@ -13,6 +13,11 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
 
+from pyod.models.iforest import IForest
+from pyod.utils.data import evaluate_print
+from pyod.utils.data import generate_data
+from pyod.utils.example import visualize
+
 # import wavelet for wavelet transform
 import pywt
 
@@ -26,20 +31,6 @@ pd.set_option("display.float_format", "{:.2f}".format)
 
 
 day = "2023-04-03"
-
-
-def calc_outliers(data, percentage_of_outliers=25):
-    # apply outlier detection to fft_result using IQR
-    q1 = np.quantile(data, percentage_of_outliers / 100)
-    q3 = np.quantile(data, 1 - (percentage_of_outliers / 100))
-    iqr = q3 - q1
-    lower_bound = q1 - 1.5 * iqr
-    upper_bound = q3 + 1.5 * iqr
-
-    # get outliers
-    outliers = np.where((data > upper_bound) | (data < lower_bound))
-
-    return outliers
 
 
 # plot data for time series
@@ -99,8 +90,18 @@ def plot_data(
     data["ISLEM ZAMANI"] = pd.to_datetime(data["ISLEM ZAMANI"], format="%H:%M:%S")
 
     if switch_var == "TIME":
-        # apply outlier detection to ISLEM HACMI using IQR
-        outliers = calc_outliers(data["ISLEM HACMI"], percentage_of_outliers)
+        # apply outlier detection to ISLEM HACMI using PyOD
+
+        contamination = percentage_of_outliers / 100
+
+        data_array = np.array(data["ISLEM HACMI"]).reshape(-1, 1)
+        clf = IForest(contamination=contamination)
+        clf.fit(data_array)
+        y_pred = clf.labels_
+        y_scores = clf.decision_scores_
+
+        # get outliers
+        outliers = np.where(y_pred == 1)[0]
 
         # print when outliers occur in time series
         print(data.iloc[outliers])
@@ -129,49 +130,65 @@ def plot_data(
 
     elif switch_var == "WAVE":
         wavelet = "db4"
-        coeffs = pywt.wavedec(data["ISLEM HACMI"], wavelet=wavelet, level=5)
+        number_of_levels = 6
+        coeffs = pywt.wavedec(
+            data["ISLEM HACMI"], wavelet=wavelet, level=number_of_levels
+        )
 
-        # get outliers
-        outliers = []
+        data_outlier = []
+        coeffs_outliers = []
 
-        outliers.append(calc_outliers(data["ISLEM HACMI"], percentage_of_outliers))
+        # apply outlier detection to data using PyOD
+        contamination = percentage_of_outliers / 100
+        data_array = np.array(data["ISLEM HACMI"]).reshape(-1, 1)
+        clf = IForest(contamination=contamination)
+        clf.fit(data_array)
+        y_pred = clf.labels_
+        y_scores = clf.decision_scores_
+        data_outlier.append(np.where(y_pred == 1)[0])
 
+        # apply outlier detection to coefficients using PyOD
         for coeff in coeffs:
-            outliers.append(calc_outliers(coeff, percentage_of_outliers))
+            coeff_array = np.array(coeff).reshape(-1, 1)
+            clf = IForest(contamination=contamination)
+            clf.fit(coeff_array)
+            y_pred = clf.labels_
+            y_scores = clf.decision_scores_
+            coeffs_outliers.append(np.where(y_pred == 1)[0])
 
-        # print when outliers occur in time series
-        print(data.iloc[outliers[0]])
-
-        fig = plt.figure(figsize=(12, 7), layout="constrained")
+        # plot data and coefficients in subplots
+        fig, axs = plt.subplots(len(coeffs) + 1, sharex=False, figsize=(20, 12))
         fig.canvas.manager.set_window_title("WAVELET - " + day)
-        spec = fig.add_gridspec(4, 2)
 
         # plot data
-        ax0 = fig.add_subplot(spec[0, :])
-        ax0.plot(data["ISLEM ZAMANI"], data["ISLEM HACMI"], "b")
-        ax0.plot(
-            data.iloc[outliers[0]]["ISLEM ZAMANI"],
-            data.iloc[outliers[0]]["ISLEM HACMI"],
+        axs[0].plot(data["ISLEM ZAMANI"], data["ISLEM HACMI"], "b")
+        axs[0].plot(
+            data.iloc[data_outlier[0]]["ISLEM ZAMANI"],
+            data.iloc[data_outlier[0]]["ISLEM HACMI"],
             "o",
             markersize=1,
             color="red",
         )
-        ax0.set_title("Volume by time - " + day)
+        axs[0].set_ylabel("Volume(₺)", rotation=0, labelpad=40)
+        axs[0].yaxis.set_label_position("left")
+        axs[0].set_title("Volume by time - " + day)
 
-        # plot coefficients in for loop by adding subplots
-        for i in range(0, 3):
-            for j in range(0, 2):
-                ax = fig.add_subplot(spec[i + 1, j])
-                ax.plot(coeffs[i + j], "b")
-                ax.plot(
-                    coeffs[i + j][outliers[i + j + 1]],
-                    "o",
-                    markersize=1,
-                    color="red",
-                )
+        axs[0].xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
 
-                ax.set_title("Coefficients - " + str(i + 1) + str(j + 1))
+        # plot coefficients
+        for i in range(len(coeffs)):
+            axs[i + 1].plot(coeffs[i], "b")
+            axs[i + 1].plot(
+                coeffs_outliers[i],
+                coeffs[i][coeffs_outliers[i]],
+                "o",
+                markersize=2,
+                color="red",
+            )
+            axs[i + 1].set_ylabel("Coefficient " + str(i + 1), rotation=0, labelpad=40)
+            axs[i + 1].yaxis.set_label_position("left")
 
+        plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1, hspace=0.5)
         plt.show()
 
     else:
@@ -184,8 +201,20 @@ def plot_data(
         # get frequencies
         freq = np.fft.fftfreq(len(data["ISLEM HACMI"]))
 
+        contamination = percentage_of_outliers / 100
+
+        clf = IForest(contamination=contamination)
+
+        # convert fft_result values into real numbers
+        fft_result_abs = fft_result.real
+
+        fft_result_abs = np.array(fft_result_abs).reshape(-1, 1)
+
+        clf.fit(fft_result_abs)
+        y_pred = clf.labels_
+
         # get outliers
-        outliers = calc_outliers(fft_result, percentage_of_outliers)
+        outliers = np.where(y_pred == 1)[0]
 
         # print when outliers occur in time series
         print(data.iloc[outliers])
@@ -239,13 +268,13 @@ for holiday in holidays:
 
 percentage_of_outliers = Scale(
     window,
-    from_=0,
-    to=50,
+    from_=0.1,
+    to=10,
     orient=HORIZONTAL,
     label="Percentage of outliers",
     length=200,
-    tickinterval=10,
-    resolution=1,
+    tickinterval=1,
+    resolution=0.1,
 )
 
 
@@ -335,7 +364,6 @@ def get_date():
         showerror("Error", "Second time is greater than 18:30")
 
         return
-
 
     plot_data(
         year,
