@@ -107,27 +107,7 @@ def plot_data(
             # print when outliers occur in time series
             print(data.iloc[outliers])
 
-            fig, ax = plt.subplots(figsize=(15, 7))
-            fig.canvas.manager.set_window_title("TIME - " + day)
-            ax.plot(data["ISLEM ZAMANI"], data["ISLEM HACMI"], "b")
-            ax.plot(
-                data.iloc[outliers]["ISLEM ZAMANI"],
-                data.iloc[outliers]["ISLEM HACMI"],
-                "o",
-                markersize=1,
-                color="red",
-            )
-
-            # set x axis to time
-            ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
-            ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=5))
-            ax.tick_params(axis="x", rotation=45)
-
-            ax.set_xlabel("Time")
-            ax.set_ylabel("Volume(₺)")
-            ax.set_title("Volume by time - " + day)
-
-            plt.show()
+            outliers = outliers[0]
 
         else:
             # apply outlier detection to ISLEM HACMI using PyOD
@@ -145,27 +125,26 @@ def plot_data(
             # print when outliers occur in time series
             print(data.iloc[outliers])
 
-            fig, ax = plt.subplots(figsize=(15, 7))
-            fig.canvas.manager.set_window_title("TIME - " + day)
-            ax.plot(data["ISLEM ZAMANI"], data["ISLEM HACMI"], "b")
-            ax.plot(
-                data.iloc[outliers]["ISLEM ZAMANI"],
-                data.iloc[outliers]["ISLEM HACMI"],
-                "o",
-                markersize=1,
-                color="red",
-            )
+        fig, ax = plt.subplots(figsize=(15, 7))
+        fig.canvas.manager.set_window_title("TIME - " + day)
 
-            # set x axis to time
-            ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M:%S"))
-            ax.xaxis.set_major_locator(mdates.MinuteLocator(interval=5))
-            ax.tick_params(axis="x", rotation=45)
+        ax.plot(data["ISLEM ZAMANI"], data["ISLEM HACMI"], "o", markersize=1)
+        # plot outliers
+        ax.plot(
+            data.iloc[outliers]["ISLEM ZAMANI"],
+            data.iloc[outliers]["ISLEM HACMI"],
+            "o",
+            markersize=1,
+            color="red",
+        )
 
-            ax.set_xlabel("Time")
-            ax.set_ylabel("Volume(₺)")
-            ax.set_title("Volume by time - " + day)
+        ax.set_xlabel("Time")
+        ax.set_ylabel("Volume(₺)")
+        ax.set_title("Volume by time - " + day)
 
-            plt.show()
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+
+        plt.show()
 
     elif switch_var == "FREQ":
         if switch_algorithm_var == "IQRCOV":
@@ -180,24 +159,10 @@ def plot_data(
 
             # get outliers
             outliers = calc_IQR(fft_result, percentage_of_outliers)
+            outliers = outliers[0]
 
             # print when outliers occur in time series
             print(data.iloc[outliers])
-
-            # plot fft_result with outliers
-            fig, ax = plt.subplots(figsize=(15, 7))
-            fig.canvas.manager.set_window_title("FREQUENCY - " + day)
-            ax.plot(freq, fft_result, "o", markersize=1)
-
-            # plot outliers
-            ax.plot(
-                freq[outliers], fft_result[outliers], "o", markersize=1, color="red"
-            )
-
-            ax.set_xlabel("Frequency")
-            ax.set_ylabel("Volume(₺)")
-            ax.set_title("Volume by frequency - " + day)
-            plt.show()
 
         else:
             # apply fast fourier transform to ISLEM HACMI
@@ -227,20 +192,48 @@ def plot_data(
             # print when outliers occur in time series
             print(data.iloc[outliers])
 
-            # plot fft_result with outliers
-            fig, ax = plt.subplots(figsize=(15, 7))
-            fig.canvas.manager.set_window_title("FREQUENCY - " + day)
-            ax.plot(freq, fft_result, "o", markersize=1)
+        # plot data and outliers in subplots besides power spectrum
+        fig, axs = plt.subplots(2, sharex=False, figsize=(15, 7))
+        fig.canvas.manager.set_window_title("FREQ - " + day)
 
-            # plot outliers
-            ax.plot(
-                freq[outliers], fft_result[outliers], "o", markersize=1, color="red"
-            )
+        axs[0].plot(freq, fft_result.real, "o", markersize=1)
+        # plot outliers
+        axs[0].plot(
+            freq[outliers],
+            fft_result.real[outliers],
+            "o",
+            markersize=1,
+            color="red",
+        )
 
-            ax.set_xlabel("Frequency")
-            ax.set_ylabel("Volume(₺)")
-            ax.set_title("Volume by frequency - " + day)
-            plt.show()
+        axs[0].set_xlabel("Time")
+        axs[0].set_ylabel("Volume(₺)")
+        axs[0].set_title("Volume by time - " + day)
+
+        axs[0].xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+
+        power_spectrum = np.abs(fft_result) ** 2
+
+        axs[1].plot(freq, power_spectrum, "o", markersize=1)
+        # plot outliers
+
+        axs[1].plot(
+            freq[outliers],
+            power_spectrum[outliers],
+            "o",
+            markersize=1,
+            color="red",
+        )
+
+        axs[1].set_xlabel("Frequency")
+        axs[1].set_ylabel("Power")
+        axs[1].set_title("Power spectrum - " + day)
+
+        plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1, hspace=0.5)
+
+        plt.show()
+
+
     else:
         wavelet = "db4"
         number_of_levels = 6
@@ -296,8 +289,8 @@ def plot_data(
         fig, axs = plt.subplots(len(coeffs) + 1, sharex=False, figsize=(20, 12))
         fig.canvas.manager.set_window_title("WAVELET - " + day)
 
-        # plot data
-        axs[0].plot(data["ISLEM ZAMANI"], data["ISLEM HACMI"], "b")
+        axs[0].plot(data["ISLEM ZAMANI"], data["ISLEM HACMI"], "o", markersize=1)
+        # plot outliers
         axs[0].plot(
             data.iloc[data_outlier[0]]["ISLEM ZAMANI"],
             data.iloc[data_outlier[0]]["ISLEM HACMI"],
@@ -305,26 +298,25 @@ def plot_data(
             markersize=1,
             color="red",
         )
-        axs[0].set_ylabel("Volume(₺)", rotation=0, labelpad=40)
-        axs[0].yaxis.set_label_position("left")
-        axs[0].set_title("Volume by time - " + day)
+
+        axs[0].set_xlabel("Time")
+        axs[0].set_ylabel("Volume(₺)")
 
         axs[0].xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
 
         # plot coefficients
         for i in range(len(coeffs)):
-            axs[i + 1].plot(coeffs[i], "b")
+            axs[i + 1].plot(coeffs[i], "o", markersize=1)
+            # plot outliers
             axs[i + 1].plot(
-                coeffs_outliers[i],
                 coeffs[i][coeffs_outliers[i]],
                 "o",
-                markersize=2,
+                markersize=1,
                 color="red",
             )
-            axs[i + 1].set_ylabel("Coefficient " + str(i + 1), rotation=0, labelpad=40)
-            axs[i + 1].yaxis.set_label_position("left")
 
         plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1, hspace=0.5)
+
         plt.show()
 
 
@@ -396,7 +388,7 @@ def get_date():
         second_minute=second_minute,
         year=year,
         month=month,
-        day=day
+        day=day,
     )
 
     if not first_time or not second_time:
