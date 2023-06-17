@@ -100,6 +100,14 @@ pip install pywt
 pip install pyod
 ```
 
+* Install mplcursors - [mplcursors](https://pypi.org/project/mplcursors/)
+</br>To detect cursor position in matplotlib graphs to hover over the graph and see the values of the graph.
+``` bash
+pip install mplcursors
+```
+
+
+
 
 ## 4. Usage
 There are two type of python file in this project. First one (grad_prod) used to get Borsa Istanbul's Intraday Transaction Book Information and collect all the data in a .csv files with their date. Second one (grad_cons) used to process the data with Fourier Transform and plot the results.
