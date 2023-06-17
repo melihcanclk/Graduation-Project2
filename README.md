@@ -1,6 +1,25 @@
 # Analysis and Data Display System of Stock Exchange Data in Frequency Domain
 2nd Semester Graduation Project Source Codes - Melihcan Çilek
 
+## Table of Contents
+1. [Introduction](#1-introduction)
+2. [Requirements](#2-requirements)
+3. [Installation](#3-installation)
+4. [Usage](#4-usage)
+    1. [grad_prod.py](#41-grad_prodpy)
+    2. [grad_cons.py](#42-grad_conspy)
+5. [Examples](#5-examples)
+    1. [UI](#51-ui)
+    2. [Time Graph](#52-time-graph)
+    3. [Frequency Graph](#53-frequency-graph)
+    4. [Wavelet Graph](#54-wavelet-graph)
+6. [References](#6-references)
+7. [License](#7-license)
+8. [Author](#8-author)
+9. [Supervisor](#9-supervisor)
+10. [Acknowledgements](#10-acknowledgements)
+
+
 ## 1. Introduction
 Project uses Borsa Istanbul's Intraday Transaction Book Information and process them with Fourier Transform to find the most dominant frequencies. 
 
