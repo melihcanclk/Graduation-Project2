@@ -24,19 +24,17 @@ jobs:
     steps:
       # Check-out repository
       - uses: actions/checkout@v3
-
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          python-version: '3.6' # Version range or exact version of a Python version to use, using SemVer's version range syntax
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
           cache: 'pip'
-          cache-dependency-path: "${{ github.action_path }}/requirements.txt"
 
       # Install dependencies
       - name: Install Dependencies
         run: |
-          pip install -r "${{ github.action_path }}/requirements.txt"
+          pip install -r requirements.txt
 
       # Build python script into a stand-alone exe
       - uses: jimkring/python-script-to-exe@v0.2.0
