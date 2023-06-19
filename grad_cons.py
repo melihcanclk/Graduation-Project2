@@ -112,8 +112,8 @@ def plot_data(
 
             outliers = outliers[0]
 
-        else:
-            # apply outlier detection to ISLEM HACMI using PyOD
+        elif switch_algorithm_var == "PyOD":
+             # apply outlier detection to ISLEM HACMI using PyOD
 
             contamination = percentage_of_outliers / 100
 
@@ -127,7 +127,16 @@ def plot_data(
 
             # print when outliers occur in time series
             print(data.iloc[outliers])
+        else: # for z-score
+            # apply outlier detection to ISLEM HACMI using z-score
+            z_scores = np.abs(data["ISLEM HACMI"] - np.mean(data["ISLEM HACMI"])) / np.std(data["ISLEM HACMI"])
+            # use contamination to get outliers
+            outliers = np.where(z_scores > 5 - percentage_of_outliers)[0]
 
+            # print when outliers occur in time series
+            print(data.iloc[outliers])
+
+        # plot data and outliers
         fig, ax = plt.subplots(figsize=(15, 7))
         fig.canvas.manager.set_window_title("TIME - " + day)
 
@@ -207,7 +216,7 @@ def plot_data(
             # print when outliers occur in time series
             print(data.iloc[outliers])
 
-        else:
+        elif switch_algorithm_var == "PyOD":
             # apply fast fourier transform to ISLEM HACMI
             fft_result = np.fft.fft(data["ISLEM HACMI"])
 
@@ -231,6 +240,23 @@ def plot_data(
 
             # get outliers
             outliers = np.where(y_pred == 1)[0]
+
+            # print when outliers occur in time series
+            print(data.iloc[outliers])
+        else:
+            # apply fast fourier transform to ISLEM HACMI
+            fft_result = np.fft.fft(data["ISLEM HACMI"])
+
+            # remove date from fft_result in ISLEM ZAMAANI
+            data["ISLEM ZAMANI"] = data["ISLEM ZAMANI"].dt.time
+
+            # get frequencies
+            freq = np.fft.fftfreq(len(data["ISLEM HACMI"]))
+
+            # get outliers using z-score
+            z_scores = np.abs(fft_result - np.mean(fft_result)) / np.std(fft_result)
+            # use contamination to get outliers
+            outliers = np.where(z_scores > 5 - percentage_of_outliers)[0]
 
             # print when outliers occur in time series
             print(data.iloc[outliers])
@@ -284,7 +310,7 @@ def plot_data(
         axs[0].set_ylabel("Volume(₺)")
         axs[0].set_title("Volume by frequency - " + day)
 
-        axs[0].xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+        axs[0].xaxis.set_major_formatter(ticker.FormatStrFormatter("%0.2f"))
 
         power_spectrum = np.abs(fft_result) ** 2
 
@@ -365,7 +391,7 @@ def plot_data(
             for i in range(len(coeffs_outliers)):
                 coeffs_outliers[i] = np.array(coeffs_outliers[i]).reshape(-1, 1)
 
-        else:
+        elif switch_algorithm_var == "PyOD":
             # apply outlier detection to data using PyOD
             contamination = percentage_of_outliers / 100
             data_array = np.array(data["ISLEM HACMI"]).reshape(-1, 1)
@@ -381,6 +407,22 @@ def plot_data(
                 clf.fit(coeff_array)
                 y_pred = clf.labels_
                 coeffs_outliers.append(np.where(y_pred == 1)[0])
+
+        else: # for z-score
+            # calculate z-score for data
+            z_scores = np.abs(data["ISLEM HACMI"] - np.mean(data["ISLEM HACMI"])) / np.std(data["ISLEM HACMI"])
+
+            # use contamination to get outliers
+            data_outlier.append(np.where(z_scores > 5 - percentage_of_outliers)[0])
+
+            # calculate z-score for coefficients
+            for coeff in coeffs:
+                z_scores = np.abs(coeff - np.mean(coeff)) / np.std(coeff)
+                # use contamination to get outliers
+                coeffs_outliers.append(np.where(z_scores > 5 - percentage_of_outliers)[0])
+
+        # print when outliers occur in time series
+        print(data.iloc[data_outlier[0]])
 
         # plot data and coefficients in subplots
         fig, axs = plt.subplots(len(coeffs) + 1, sharex=False, figsize=(20, 12))
@@ -530,7 +572,7 @@ for holiday in holidays:
 percentage_of_outliers = Scale(
     window,
     from_=0.1,
-    to=5,
+    to=4.9,
     orient=HORIZONTAL,
     label="Percentage of outliers",
     length=200,
@@ -608,19 +650,25 @@ algorithm_label.pack(pady=(10, 0))
 switch_frame_algorithm = Frame(window)
 switch_frame_algorithm.pack()
 
-switch_algorithm_var = StringVar(value="PyOD - IForest")
+switch_algorithm_var = StringVar(value="PyOD")
 
 pyod_iforest_button = Radiobutton(
     switch_frame_algorithm,
     text="PyOD - IForest",
     variable=switch_algorithm_var,
-    value="PyOD - IForest",
+    value="PyOD",
 )
 iqrcov_button = Radiobutton(
     switch_frame_algorithm,
     text="IQRCOV",
     variable=switch_algorithm_var,
     value="IQRCOV",
+)
+z_score_button = Radiobutton(
+    switch_frame_algorithm,
+    text="Z-Score",
+    variable=switch_algorithm_var,
+    value="Z-Score",
 )
 
 
@@ -671,6 +719,7 @@ wave_button.pack(side=LEFT)
 ## pack radio buttons for algorithms
 pyod_iforest_button.pack(side=LEFT)
 iqrcov_button.pack(side=LEFT)
+z_score_button.pack(side=LEFT)
 
 ## pack percentage of outliers
 percentage_of_outliers.pack()
