@@ -158,6 +158,12 @@ Other than that, In time and frequency graphs, the time that is detected by the 
     example_images/wavelet.png
 )
 
+### 5.5. Trailer Video
+<a  href="https://www.youtube.com/watch?v=adMZpV5n-uc" target="_blank">
+    <img width="600px" src="https://i.imgur.com/c5b9Ut9.png" />
+</a>
+
+
 ## 6. References
 * [Borsa Istanbul](https://www.borsaistanbul.com/en/)
 * [Borsa Istanbul Intraday Transaction Book Information](https://datastore.borsaistanbul.com/)
