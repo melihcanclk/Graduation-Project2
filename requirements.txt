@@ -1,5 +1,4 @@
 altgraph==0.17.3
-apturl==0.5.2
 asttokens==2.2.1
 Babel==2.12.1
 backcall==0.2.0
