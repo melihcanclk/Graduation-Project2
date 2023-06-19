@@ -1,13 +1,12 @@
 name: graduation-project
-run-name: ${{ github.actor }} is learning GitHub Actions
+run-name: ${{ github.actor }} graduation project executable creation action
 on: [push]
 jobs:
-  check-bats-version:
+  create-executable:
     runs-on: ubuntu-latest
     steps:
-      - uses: Nuitka/Nuitka-Action@main
-        with:
-          nuitka-version: main
-          script-name: ../../grad_cons.py
+      - name: Build EXE from Python Script
+        uses: Nuitka/Nuitka-Action@v0.5
+
 
 
