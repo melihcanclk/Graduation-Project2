@@ -55,7 +55,6 @@ def plot_data(
     first_time=None,
     second_time=None,
 ):
-    print("percentage of outliers: ", percentage_of_outliers)
     # create day string
     day = year + "-" + month + "-" + day
 
