@@ -106,7 +106,37 @@ pip install pyod
 pip install mplcursors
 ```
 
+## 3.1. Install with requirements.txt
+* Install all the requirements with requirements.txt
+``` bash
+pip install -r requirements.txt
+```
 
+## 3.2. Run with PyInstaller
+* Install PyInstaller - [PyInstaller](https://www.pyinstaller.org/)
+``` bash
+pip install pyinstaller
+```
+
+* Run PyInstaller
+</br>These hidden imports is for the errors that occured while compiling the python file. It is for the errors that occured while importing babel.numbers and PIL._tkinter_finder for the Calendar Widget.
+
+``` bash
+pyinstaller grad_cons.py --onefile -w --hidden-import "babel.numbers" --hidden-import "PIL._tkinter_finder"
+```
+
+3.3. Executable File in dist Folder
+</br>After running PyInstaller, it will create a dist folder and put the executable file in it. For this project executable works, it needs to be in the same folder with data folder. After moving the executable file to the same folder with data folder, it can be runned by double clicking it or by using following command:
+
+for Ubuntu
+``` bash
+./grad_cons
+```
+
+for Windows, you can double click the grad_cons.exe or use following command:
+``` bash
+grad_cons.exe
+```
 
 
 ## 4. Usage
