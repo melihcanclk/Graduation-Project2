@@ -1,4 +1,13 @@
-- uses: Nuitka/Nuitka-Action@main
-  with:
-    nuitka-version: main
-    script-name: grad_cons.py
+name: graduation-project
+run-name: ${{ github.actor }} is learning GitHub Actions
+on: [push]
+jobs:
+  check-bats-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: grad_cons.py
+
+
