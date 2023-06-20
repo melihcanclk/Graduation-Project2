@@ -362,7 +362,7 @@ def plot_data(
 
     else:
         wavelet = "db4"
-        number_of_levels = 6
+        number_of_levels = 10
 
         data_outlier = []
         coeffs_outliers = []
@@ -370,6 +370,18 @@ def plot_data(
         coeffs = pywt.wavedec(
             data["ISLEM HACMI"], wavelet=wavelet, level=number_of_levels
         )
+
+        # reconstruct low frequency coefficients using upcoef
+        coeffs[0] = pywt.upcoef(
+            "a", coeffs[0], wavelet=wavelet, level=number_of_levels, take=len(data)
+        )
+
+        # reconstruct high frequency coefficients using upcoef
+        for i in range(1, len(coeffs)):
+            coeffs[i] = pywt.upcoef(
+                "d", coeffs[i], wavelet=wavelet, level=(number_of_levels - i + 1), take=len(data)
+            )
+
 
         if switch_algorithm_var == "IQRCOV":
             # apply outlier detection to data using IQR
