@@ -140,10 +140,7 @@ def process_file_g(progressed_chunk, process_file_button, select_file_button):
     process_file_button.config(text="Processing File...", state="disabled")
     select_file_button.config(state="disabled")
 
-    progressed_chunk.config(state="normal")
-    progressed_chunk.delete(1.0, "end")
-    progressed_chunk.insert(1.0, "Chunk " + str(i + 1) + " processed\n")
-    progressed_chunk.config(state="disabled")
+    
     i = 0
 
     # get total file size
@@ -155,7 +152,6 @@ def process_file_g(progressed_chunk, process_file_button, select_file_button):
         nonlocal i
         nonlocal stop_flag
         nonlocal progressed_chunk
-
         print("Processing file started")
 
         for chunk in pd.read_csv(
@@ -167,12 +163,7 @@ def process_file_g(progressed_chunk, process_file_button, select_file_button):
             if close_window:
                 break
 
-            print("Chunk " + str(i + 1) + " started")
-            # calculate percentage
-            progressed_chunk.config(state="normal")
-            progressed_chunk.delete(1.0, "end")
-            progressed_chunk.insert(1.0, "Chunk " + str(i + 1) + " processed\n")
-            progressed_chunk.config(state="disabled")
+            
 
             window.update()
             temp_data = pd.DataFrame(
@@ -220,9 +211,11 @@ def process_file_g(progressed_chunk, process_file_button, select_file_button):
             i += 1
             print("Chunk " + str(i + 1) + " processed")
 
-            if close_window:
-                process_file_button.config(text="Process File", state="normal")
-                break
+            progressed_chunk.config(state="normal")
+            progressed_chunk.delete(1.0, "end")
+            progressed_chunk.insert(1.0, "Chunk " + str(i + 1) + " processed\n")
+            progressed_chunk.config(state="disabled")
+
 
     thread = threading.Thread(target=process_file)
     window.protocol("WM_DELETE_WINDOW", lambda: on_closing(thread))
@@ -235,13 +228,13 @@ def process_file_g(progressed_chunk, process_file_button, select_file_button):
     stop_flag.set()
 
     thread.join()
-
-    # message box to show process is done
-    messagebox.showinfo("Done", "File processed successfully")
-
+    
     process_file_button.config(text="Process File", state="normal")
     select_file_button.config(state="normal")
-    progressed_chunk.config(state="normal", text="Enter File and \nClick Process File \nButton")
+    
+    progressed_chunk.config(state="normal")
+    progressed_chunk.delete(1.0, "end")
+    progressed_chunk.insert(1.0, "Process Done\n")
 
     print("Done")
 
