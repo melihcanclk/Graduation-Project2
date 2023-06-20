@@ -160,6 +160,13 @@ This python file can be used to process the data with Fourier Transform and plot
 python grad_cons.py
 ```
 
+### 4.3. grad_prod_ui.py
+This python file can be used to convert PP_GUNICIISLEM.M.[year][month].csv files to collection of .csv files with their date using a UI. I have shared screenshots of the UI in the examples section. It can be used with following command:
+``` bash
+python grad_prod_ui.py
+```
+
+
 After compilation, it will open a tkinter window. In this window, there will be a Calendar of 2023 that can be selected the date, two radio button components, one is for selecting the type of the graph which are Time, Frequency and Wavelet Graphs. Other one is for selecting the type of the algorithm that will be used for detect anomalies. There are 2 algorithms implemented to detect anomalies which are IForest and the other one is IQR. There are two boxes that will be used to limit the time interval of the graph. There is a slider for get the outlier detection contamination from user and "Plot Graph" button to plot the graph.
 
 After selecting the date, type of the graph, type of the algorithm, time interval and outlier detection contamination, user can click "Plot Graph" button to plot the graph. After plotting the graph, we will be able to see the visualization of the data and the anomalies that are detected by the algorithm.
@@ -169,9 +176,16 @@ Other than that, In time and frequency graphs, the time that is detected by the 
 ## 5. Examples
 ### 5.1. UI
 
+* grad_prod_ui.py UI
+<div align="center">
+    <img  src="example_images/Prod_UI.png"></img>
+</div>
+
+
+* grad_cons.py UI
 <div align="center">
     <img  src="example_images/ui.png"></img>
-</dif>
+</div>
 
 ### 5.2. Time Graph
 ![Time Graph](

@@ -16,7 +16,7 @@ colnames = [
     "GUNCELLEME ZAMANI.1",
 ]
 
-CHUNK_SIZE = 90000 # nearly 8 GB data in one chunk moved to RAM 
+CHUNK_SIZE = 5000000 # nearly 5 GB data in one chunk moved to RAM 
 
 # take holidays out
 # holidays are 1 jan, 21, 22, 23 april, 1 may, 19 may, 28 june, 29 june, 30 june, 1 july, 15 july, 30 august, 28 october, 29 october for 2023
