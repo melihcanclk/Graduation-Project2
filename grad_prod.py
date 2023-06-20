@@ -1,7 +1,19 @@
 import os
 import pandas as pd
 from constants import *
+import calendar
 
+
+
+
+year = "2023"
+month = "02"
+
+DIRECTORY = "data" + year + month
+
+# get all dates in month
+dates = get_weekdays(int(year), int(month))
+dates = [date for date in dates if date not in holidays]
 
 # create directory named DIRECTORY if it doesnt exist
 if not os.path.exists(DIRECTORY):

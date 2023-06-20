@@ -27,9 +27,6 @@ import mplcursors
 
 pd.set_option("display.float_format", "{:.2f}".format)
 
-day = "2023-04-03"
-
-
 def calc_IQR(data, percentage_of_outliers=25):
     # apply outlier detection using IQR algorithm
     q1 = np.quantile(data, percentage_of_outliers / 100)
@@ -542,9 +539,6 @@ window.geometry("500x550")
 # set resizable to false
 window.resizable(False, False)
 
-# seperate day into year, month, day
-year, month, day = day.split("-")
-
 time_now = pd.to_datetime("now")
 # create calendar
 
@@ -628,7 +622,6 @@ cal.pack(pady=20)
 
 label_graph = Label(window, text="Graph")
 label_graph.pack()
-
 
 switch_frame = Frame(window)
 switch_frame.pack()
