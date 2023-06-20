@@ -125,6 +125,10 @@ pip install pyinstaller
 pyinstaller grad_cons.py --onefile -w --hidden-import "babel.numbers" --hidden-import "PIL._tkinter_finder"
 ```
 
+``` bash
+pyinstaller grad_prod_ui.py --onefile -w 
+```
+
 3.3. Executable File in dist Folder
 </br>After running PyInstaller, it will create a dist folder and put the executable file in it. For this project executable works, it needs to be in the same folder with data folder. After moving the executable file to the same folder with data folder, it can be runned by double clicking it or by using following command:
 
