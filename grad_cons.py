@@ -115,6 +115,12 @@ def plot_data(
             clf = IForest(contamination=contamination)
             clf.fit(data_array)
             y_pred = clf.labels_
+            y_score = clf.decision_scores_
+
+            # draw histogram
+            plt.hist(y_score, bins=50)
+            plt.title("Histogram for IForest")
+            plt.show()
 
             # get outliers
             outliers = np.where(y_pred == 1)[0]
@@ -155,16 +161,15 @@ def plot_data(
         plt.show()
 
     elif switch_var == "FREQ":
+        # apply fast fourier transform to ISLEM HACMI
+        fft_result = np.fft.fft(data["ISLEM HACMI"])
+
+        # remove date from fft_result in ISLEM ZAMAANI
+        data["ISLEM ZAMANI"] = data["ISLEM ZAMANI"].dt.time
+
+        # get frequencies
+        freq = np.fft.fftfreq(len(data["ISLEM HACMI"]))
         if switch_algorithm_var == "IQRCOV":
-            # apply fast fourier transform to ISLEM HACMI
-            fft_result = np.fft.fft(data["ISLEM HACMI"])
-
-            # remove date from fft_result in ISLEM ZAMAANI
-            data["ISLEM ZAMANI"] = data["ISLEM ZAMANI"].dt.time
-
-            # get frequencies
-            freq = np.fft.fftfreq(len(data["ISLEM HACMI"]))
-
             # get outliers
             outliers = calc_IQR(fft_result, percentage_of_outliers)
             outliers = outliers[0]
@@ -173,15 +178,6 @@ def plot_data(
             print(data.iloc[outliers])
 
         elif switch_algorithm_var == "PyOD":
-            # apply fast fourier transform to ISLEM HACMI
-            fft_result = np.fft.fft(data["ISLEM HACMI"])
-
-            # remove date from fft_result in ISLEM ZAMAANI
-            data["ISLEM ZAMANI"] = data["ISLEM ZAMANI"].dt.time
-
-            # get frequencies
-            freq = np.fft.fftfreq(len(data["ISLEM HACMI"]))
-
             contamination = percentage_of_outliers / 100
 
             clf = IForest(contamination=contamination)
@@ -193,6 +189,12 @@ def plot_data(
 
             clf.fit(fft_result_abs)
             y_pred = clf.labels_
+            y_score = clf.decision_scores_
+
+            # draw histogram
+            plt.hist(y_score, bins=50)
+            plt.title("Histogram for IForest")
+            plt.show()
 
             # get outliers
             outliers = np.where(y_pred == 1)[0]
@@ -200,15 +202,6 @@ def plot_data(
             # print when outliers occur in time series
             print(data.iloc[outliers])
         else:
-            # apply fast fourier transform to ISLEM HACMI
-            fft_result = np.fft.fft(data["ISLEM HACMI"])
-
-            # remove date from fft_result in ISLEM ZAMAANI
-            data["ISLEM ZAMANI"] = data["ISLEM ZAMANI"].dt.time
-
-            # get frequencies
-            freq = np.fft.fftfreq(len(data["ISLEM HACMI"]))
-
             # get outliers using z-score
             z_scores = np.abs(fft_result - np.mean(fft_result)) / np.std(fft_result)
             # use contamination to get outliers
@@ -289,13 +282,10 @@ def plot_data(
             outliers = calc_IQR(data["ISLEM HACMI"], percentage_of_outliers)
             data_outlier.append(outliers)
 
-
             # apply outlier detection to coefficients using IQR
             for coeff in coeffs:
                 outliers = calc_IQR(coeff, percentage_of_outliers)
                 coeffs_outliers.append(outliers)
-
-            
 
         elif switch_algorithm_var == "PyOD":
             # apply outlier detection to data using PyOD
@@ -304,14 +294,29 @@ def plot_data(
             clf = IForest(contamination=contamination)
             clf.fit(data_array)
             y_pred = clf.labels_
+            y_score = clf.decision_scores_
+
+           #draw multiple histograms
+            fig, axs = plt.subplots(len(coeffs) + 1, sharex=False, figsize=(20, 12))
+            fig.canvas.manager.set_window_title("WAVELET - " + day)
+
+            axs[0].hist(y_score, bins=50)
+
+            
             data_outlier.append(np.where(y_pred == 1)[0])
 
+            i = 1
             # apply outlier detection to coefficients using PyOD
             for coeff in coeffs:
                 coeff_array = np.array(coeff).reshape(-1, 1)
                 clf = IForest(contamination=contamination)
                 clf.fit(coeff_array)
                 y_pred = clf.labels_
+                y_score = clf.decision_scores_
+
+                axs[i].hist(y_score, bins=50)
+
+                i += 1
                 coeffs_outliers.append(np.where(y_pred == 1)[0])
 
         else:  # for z-score
@@ -330,7 +335,10 @@ def plot_data(
                 coeffs_outliers.append(
                     np.where(z_scores > 5 - percentage_of_outliers)[0]
                 )
-        
+
+        # plot histogram for data
+        plt.show()
+
         data_outlier = data_outlier[0]
 
         for i in range(len(coeffs_outliers)):
