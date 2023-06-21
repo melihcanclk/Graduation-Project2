@@ -3,7 +3,19 @@ import pandas as pd
 from constants import *
 import calendar
 
+def get_weekdays(year, month):
+    cal = calendar.Calendar()
+    weekdays = []
 
+    # Iterate over each day in the specified month
+    for day in cal.itermonthdates(year, month):
+        # Filter out days that belong to the next or previous month
+        if day.month == month:
+            # Check if the day is a weekday (0-4 represent Monday-Friday)
+            if day.weekday() < 5:
+                weekdays.append(day)
+
+    return weekdays
 
 
 year = "2023"
@@ -44,7 +56,7 @@ for _date in dates:
         open(name, "w").close()
 
 
-pd.set_option("display.float_format", "{:.2f}".format)
+pd.set_option("display.float_format", "{:.30f}".format)
 
 i = 0
 

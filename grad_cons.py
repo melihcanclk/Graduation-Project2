@@ -22,10 +22,8 @@ from constants import *
 
 from precaution import precaution_time
 
-import mplcursors
+pd.set_option("display.float_format", "{:.30f}".format)
 
-
-pd.set_option("display.float_format", "{:.2f}".format)
 
 def calc_IQR(data, percentage_of_outliers=25):
     # apply outlier detection using IQR algorithm
@@ -109,7 +107,7 @@ def plot_data(
             outliers = outliers[0]
 
         elif switch_algorithm_var == "PyOD":
-             # apply outlier detection to ISLEM HACMI using PyOD
+            # apply outlier detection to ISLEM HACMI using PyOD
 
             contamination = percentage_of_outliers / 100
 
@@ -123,9 +121,11 @@ def plot_data(
 
             # print when outliers occur in time series
             print(data.iloc[outliers])
-        else: # for z-score
+        else:  # for z-score
             # apply outlier detection to ISLEM HACMI using z-score
-            z_scores = np.abs(data["ISLEM HACMI"] - np.mean(data["ISLEM HACMI"])) / np.std(data["ISLEM HACMI"])
+            z_scores = np.abs(
+                data["ISLEM HACMI"] - np.mean(data["ISLEM HACMI"])
+            ) / np.std(data["ISLEM HACMI"])
             # use contamination to get outliers
             outliers = np.where(z_scores > 5 - percentage_of_outliers)[0]
 
@@ -144,46 +144,6 @@ def plot_data(
             "o",
             markersize=1,
             color="red",
-        )
-
-        # annotate outliers on hover
-        annotations = []
-
-        # add values to annotations
-        for i in range(len(outliers)):
-            annotations.append(
-                ax.annotate(
-                    data.iloc[outliers[i]]["ISLEM HACMI"],
-                    (
-                        data.iloc[outliers[i]]["ISLEM ZAMANI"],
-                        data.iloc[outliers[i]]["ISLEM HACMI"],
-                    ),
-                    xytext=(
-                        data.iloc[outliers[i]]["ISLEM ZAMANI"],
-                        data.iloc[outliers[i]]["ISLEM HACMI"],
-                    ),
-                    textcoords="offset points",
-                    size=10,
-                    bbox=dict(boxstyle="round", fc="w"),
-                )
-            )
-
-        # add hover functionality
-        cursor = mplcursors.cursor(
-            ax,
-            hover=True,
-        )
-
-        # add annotations to cursor
-        cursor.connect(
-            "add",
-            lambda sel: (
-                sel.annotation.set_text(annotations[sel.index].get_text())
-                if sel.annotation != None
-                and sel.index < len(annotations)
-                and sel.index >= 0
-                else None
-            ),
         )
 
         ax.set_xlabel("Time")
@@ -271,37 +231,6 @@ def plot_data(
             color="red",
         )
 
-        # annotate outliers on hover
-        annotations = []
-
-        # add values to annotations
-        for i in range(len(outliers)):
-            annotations.append(
-                axs[0].annotate(
-                    data.iloc[outliers[i]]["ISLEM HACMI"],
-                    (freq[outliers[i]], fft_result.real[outliers[i]]),
-                    xytext=(freq[outliers[i]], fft_result.real[outliers[i]]),
-                    textcoords="offset points",
-                    size=10,
-                    bbox=dict(boxstyle="round", fc="w"),
-                )
-            )
-
-        # add hover functionality
-        cursor = mplcursors.cursor(axs[0], hover=True)
-
-        # add annotations to cursor
-        cursor.connect(
-            "add",
-            lambda sel: (
-                sel.annotation.set_text(annotations[sel.index].get_text())
-                if sel.annotation != None
-                and sel.index < len(annotations)
-                and sel.index >= 0
-                else None
-            ),
-        )
-
         axs[0].set_xlabel("Frequency")
         axs[0].set_ylabel("Volume(₺)")
         axs[0].set_title("Volume by frequency - " + day)
@@ -319,37 +248,6 @@ def plot_data(
             "o",
             markersize=1,
             color="red",
-        )
-
-        # annotate outliers on hover
-        annotations = []
-
-        # add values to annotations
-        for i in range(len(outliers)):
-            annotations.append(
-                axs[1].annotate(
-                    data.iloc[outliers[i]]["ISLEM HACMI"],
-                    (freq[outliers[i]], power_spectrum[outliers[i]]),
-                    xytext=(freq[outliers[i]], power_spectrum[outliers[i]]),
-                    textcoords="offset points",
-                    size=10,
-                    bbox=dict(boxstyle="round", fc="w"),
-                )
-            )
-
-        # add hover functionality
-        cursor = mplcursors.cursor(axs[1], hover=True)
-
-        # add annotations to cursor
-        cursor.connect(
-            "add",
-            lambda sel: (
-                sel.annotation.set_text(annotations[sel.index].get_text())
-                if sel.annotation != None
-                and sel.index < len(annotations)
-                and sel.index >= 0
-                else None
-            ),
         )
 
         axs[1].set_xlabel("Frequency")
@@ -379,25 +277,25 @@ def plot_data(
         # reconstruct high frequency coefficients using upcoef
         for i in range(1, len(coeffs)):
             coeffs[i] = pywt.upcoef(
-                "d", coeffs[i], wavelet=wavelet, level=(number_of_levels - i + 1), take=len(data)
+                "d",
+                coeffs[i],
+                wavelet=wavelet,
+                level=(number_of_levels - i + 1),
+                take=len(data),
             )
-
 
         if switch_algorithm_var == "IQRCOV":
             # apply outlier detection to data using IQR
             outliers = calc_IQR(data["ISLEM HACMI"], percentage_of_outliers)
             data_outlier.append(outliers)
 
-            # reshape data outliers
-            data_outlier = np.array(data_outlier).reshape(-1, 1)
 
             # apply outlier detection to coefficients using IQR
             for coeff in coeffs:
                 outliers = calc_IQR(coeff, percentage_of_outliers)
                 coeffs_outliers.append(outliers)
 
-            for i in range(len(coeffs_outliers)):
-                coeffs_outliers[i] = np.array(coeffs_outliers[i]).reshape(-1, 1)
+            
 
         elif switch_algorithm_var == "PyOD":
             # apply outlier detection to data using PyOD
@@ -416,9 +314,11 @@ def plot_data(
                 y_pred = clf.labels_
                 coeffs_outliers.append(np.where(y_pred == 1)[0])
 
-        else: # for z-score
+        else:  # for z-score
             # calculate z-score for data
-            z_scores = np.abs(data["ISLEM HACMI"] - np.mean(data["ISLEM HACMI"])) / np.std(data["ISLEM HACMI"])
+            z_scores = np.abs(
+                data["ISLEM HACMI"] - np.mean(data["ISLEM HACMI"])
+            ) / np.std(data["ISLEM HACMI"])
 
             # use contamination to get outliers
             data_outlier.append(np.where(z_scores > 5 - percentage_of_outliers)[0])
@@ -427,10 +327,17 @@ def plot_data(
             for coeff in coeffs:
                 z_scores = np.abs(coeff - np.mean(coeff)) / np.std(coeff)
                 # use contamination to get outliers
-                coeffs_outliers.append(np.where(z_scores > 5 - percentage_of_outliers)[0])
+                coeffs_outliers.append(
+                    np.where(z_scores > 5 - percentage_of_outliers)[0]
+                )
+        
+        data_outlier = data_outlier[0]
+
+        for i in range(len(coeffs_outliers)):
+            coeffs_outliers[i] = coeffs_outliers[i][0]
 
         # print when outliers occur in time series
-        print(data.iloc[data_outlier[0]])
+        print(data.iloc[data_outlier])
 
         # plot data and coefficients in subplots
         fig, axs = plt.subplots(len(coeffs) + 1, sharex=False, figsize=(20, 12))
@@ -444,43 +351,6 @@ def plot_data(
             "o",
             markersize=1,
             color="red",
-        )
-
-        # annotate outliers on hover
-        annotations = []
-
-        # add values to annotations
-        for i in range(len(data_outlier[0])):
-            annotations.append(
-                axs[0].annotate(
-                    data.iloc[data_outlier[0][i]]["ISLEM HACMI"],
-                    (
-                        data.iloc[data_outlier[0][i]]["ISLEM ZAMANI"],
-                        data.iloc[data_outlier[0][i]]["ISLEM HACMI"],
-                    ),
-                    xytext=(
-                        data.iloc[data_outlier[0][i]]["ISLEM ZAMANI"],
-                        data.iloc[data_outlier[0][i]]["ISLEM HACMI"],
-                    ),
-                    textcoords="offset points",
-                    size=10,
-                    bbox=dict(boxstyle="round", fc="w"),
-                )
-            )
-
-        # add hover functionality
-        cursor = mplcursors.cursor(axs[0], hover=True)
-
-        # add annotations to cursor
-        cursor.connect(
-            "add",
-            lambda sel: (
-                sel.annotation.set_text(annotations[sel.index].get_text())
-                if sel.annotation != None
-                and sel.index < len(annotations)
-                and sel.index >= 0
-                else None
-            ),
         )
 
         axs[0].set_xlabel("Time")
@@ -500,41 +370,6 @@ def plot_data(
                 markersize=2,
                 color="red",
             )
-
-            # annotate outliers on hover
-            annotations = []
-
-            # add values to annotations
-            for j in range(len(coeffs_outliers[i])):
-                annotations.append(
-                    axs[i + 1].annotate(
-                        coeffs[i][coeffs_outliers[i][j]],
-                        (coeffs_outliers[i][j], coeffs[i][coeffs_outliers[i][j]]),
-                        xytext=(
-                            coeffs_outliers[i][j],
-                            coeffs[i][coeffs_outliers[i][j]],
-                        ),
-                        textcoords="offset points",
-                        size=10,
-                        bbox=dict(boxstyle="round", fc="w"),
-                    )
-                )
-
-            # add hover functionality
-            cursor = mplcursors.cursor(axs[i + 1], hover=True)
-
-            # add annotations to cursor
-            cursor.connect (
-                "add",
-                lambda sel: (
-                    sel.annotation.set_text(annotations[sel.index].get_text())  
-                    if sel.annotation != None
-                    and sel.index < len(annotations)
-                    and sel.index >= 0
-                    else None
-                ),
-            )
-
 
             axs[i + 1].set_xlabel("Time")
             axs[i + 1].set_ylabel("Coefficient " + str(i + 1), rotation=0, labelpad=40)

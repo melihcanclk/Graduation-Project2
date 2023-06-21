@@ -135,7 +135,7 @@ def process_file_g(progressed_chunk, process_file_button, select_file_button):
         if not path.isfile(name):
             open(name, "w").close()
 
-    pd.set_option("display.float_format", "{:.2f}".format)
+    pd.set_option("display.float_format", "{:.30f}".format)
 
     process_file_button.config(text="Processing File...", state="disabled")
     select_file_button.config(state="disabled")
