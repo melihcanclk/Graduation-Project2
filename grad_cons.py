@@ -22,7 +22,7 @@ from constants import *
 
 from precaution import precaution_time
 
-pd.set_option("display.float_format", "{:.30f}".format)
+pd.set_option("display.float_format", "{:.40f}".format)
 
 
 def calc_IQR(data, percentage_of_outliers=25):
@@ -280,11 +280,13 @@ def plot_data(
         if switch_algorithm_var == "IQRCOV":
             # apply outlier detection to data using IQR
             outliers = calc_IQR(data["ISLEM HACMI"], percentage_of_outliers)
+            outliers = outliers[0]
             data_outlier.append(outliers)
 
             # apply outlier detection to coefficients using IQR
             for coeff in coeffs:
                 outliers = calc_IQR(coeff, percentage_of_outliers)
+                outliers = outliers[0]
                 coeffs_outliers.append(outliers)
 
         elif switch_algorithm_var == "PyOD":
@@ -340,9 +342,6 @@ def plot_data(
         plt.show()
 
         data_outlier = data_outlier[0]
-
-        for i in range(len(coeffs_outliers)):
-            coeffs_outliers[i] = coeffs_outliers[i][0]
 
         # print when outliers occur in time series
         print(data.iloc[data_outlier])
@@ -455,9 +454,7 @@ def get_date():
         day=day,
     )
 
-    if not first_time or not second_time:
-        return
-
+    
     plot_data(
         year,
         month,

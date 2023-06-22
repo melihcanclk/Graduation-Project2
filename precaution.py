@@ -119,5 +119,10 @@ def precaution_time(first_hour, first_minute, second_hour, second_minute, year, 
         showerror("Error", "Second time is greater than 18:30")
 
         return False, False
-    
+
+
+    if not first_time or not second_time:
+        return False, False
+
+
     return first_time, second_time

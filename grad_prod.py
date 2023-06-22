@@ -3,6 +3,9 @@ import pandas as pd
 from constants import *
 import calendar
 
+pd.set_option("display.float_format", "{:.40f}".format)
+
+
 def get_weekdays(year, month):
     cal = calendar.Calendar()
     weekdays = []
@@ -56,7 +59,6 @@ for _date in dates:
         open(name, "w").close()
 
 
-pd.set_option("display.float_format", "{:.30f}".format)
 
 i = 0
 

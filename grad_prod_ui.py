@@ -3,8 +3,6 @@ import signal
 from tkinter import HORIZONTAL, Scale, Tk, Button, Text, Label, messagebox
 from tkinter.filedialog import askopenfilename
 
-from tkinter.ttk import Progressbar
-
 import pandas as pd
 
 from constants import CHUNK_SIZE, holidays
@@ -12,6 +10,9 @@ from constants import CHUNK_SIZE, holidays
 import threading
 
 import calendar
+
+pd.set_option("display.float_format", "{:.40f}".format)
+
 
 GB = 1000000
 
@@ -134,8 +135,6 @@ def process_file_g(progressed_chunk, process_file_button, select_file_button):
         name = DIRECTORY + "/" + _date + ".csv"
         if not path.isfile(name):
             open(name, "w").close()
-
-    pd.set_option("display.float_format", "{:.30f}".format)
 
     process_file_button.config(text="Processing File...", state="disabled")
     select_file_button.config(state="disabled")
