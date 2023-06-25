@@ -65,7 +65,7 @@ pip3 install scipy
 
 * Install PyQT5 - [PyQT5](https://pypi.org/project/PyQt5/)
 ``` bash
-pip install PyQt5==5.9.2
+pip install PyQt5
 ```
 
 * Install Python 3 TK - [Python 3 TK](https://docs.python.org/3/library/tk.html)
@@ -80,11 +80,6 @@ for Fedora
 sudo dnf install python3-tkinter
 ```
 
-* Install Calendar - [Calendar Widget](https://docs.python.org/3/library/calendar.html)
-``` bash
-pip install calendar
-```
-
 * Install tkcalendar - [Calendar Widget](https://pypi.org/project/tkcalendar/)
 ``` bash
 pip install tkcalendar
@@ -92,7 +87,7 @@ pip install tkcalendar
 
 * Install pywt - [Wavelet Transform](https://pywavelets.readthedocs.io/en/latest/)
 ``` bash
-pip install pywt
+pip install PyWavelets
 ```
 
 * Install pyOD - [Anomaly Detection](https://pyod.readthedocs.io/en/latest/)
@@ -109,7 +104,7 @@ pip install mplcursors
 ## 3.1. Install with requirements.txt
 * Install all the requirements with requirements.txt
 ``` bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## 3.2. Run with PyInstaller
